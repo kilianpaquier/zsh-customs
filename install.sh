@@ -53,8 +53,8 @@ log_info "Updating zsh-customs ..."
 # Set up default .env file and source it
 ##############################################
 
-if [ -n "$installs" ]; then
-  echo "installs=\"$installs\"" > "$dir/.env"
+if [ -n "$DOTFILES" ]; then
+  echo "DOTFILES=\"$DOTFILES\"" > "$dir/.env"
 elif [ ! -f "$dir/.env" ]; then
   log_info "Setting up default zsh-customs config in $dir/.env ..."
   cp "$dir/default.env" "$dir/.env"
@@ -77,7 +77,7 @@ if [ ! -d "$ZSH" ]; then
 fi
 
 ##############################################
-# Iterate over $installs (defined in .env)
+# Iterate over $DOTFILES (defined in .env)
 # and run installation script
 # and then run customs links sync
 ##############################################
