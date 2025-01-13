@@ -11,6 +11,7 @@ Handle easily multiple ZSH_CUSTOM projects at once.
 
 The minimal layout for a ZSH_CUSTOM project with `zsh-customs` is:
 
+```tree
 ├── custom
 │   ├── plugins (Oh My Zsh custom plugins)
 │   ├── themes (Oh My Zsh custom themes)
@@ -18,6 +19,7 @@ The minimal layout for a ZSH_CUSTOM project with `zsh-customs` is:
 ├── .user.zshrc (custom zshrc to source for the current project)
 ├── .zshrc (optional, since it's the above file that's sourced)
 └── install.sh (optional with +x rights, will be run when cloned)
+```
 
 When using `zsh-customs`, make sure to not setup `ZSH_CUSTOM` directly like `ZSH_CUSTOM="path/to/custom/zsh"` 
 but with the appropriate shell instruction: `: "${ZSH_CUSTOM:="path/to/custom/zsh}"`.
