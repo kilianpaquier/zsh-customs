@@ -87,7 +87,7 @@ mkdir -p "$dir/customs"
 for dotfile in $DOTFILES; do
   dotfile_name="$(basename "$dotfile" .git)"
   dotfile_dir="$dir/customs/$dotfile_name"
-  log_info "Running installation script of $dotfile_name ..."
+  log_info "Setting up $dotfile_name custom ..."
 
   (
     [ -d "$dotfile_dir" ] || git submodule add "$dotfile" "$dotfile_dir"
@@ -115,6 +115,8 @@ for dotfile in $DOTFILES; do
       done
     fi
   )
+
+  log_success "Ended $dotfile_name setup ..."
 done
 
 ##############################################
