@@ -16,15 +16,9 @@ The minimal layout for a ZSH_CUSTOM project with `zsh-customs` is:
 │   ├── plugins (Oh My Zsh custom plugins)
 │   ├── themes (Oh My Zsh custom themes)
 │   └── example.zsh (additional .zsh file to be sourced by Oh My Zsh on startup)
-├── .user.zshrc (custom zshrc to source for the current project)
-├── .zshrc (optional, since it's the above file that's sourced)
+├── .env.zsh (custom zshrc to source for the current project)
 └── install.sh (optional with +x rights, will be run when cloned)
 ```
-
-When using `zsh-customs`, make sure to not setup `ZSH_CUSTOM` directly like `ZSH_CUSTOM="path/to/custom/zsh"` 
-but with the appropriate shell instruction: `: "${ZSH_CUSTOM:="path/to/custom/zsh}"`.
-
-By doing that, it won't break your project when using it without `zsh-customs` but will let `ZSH_CUSTOM` to default when using it 😉.
 
 ## Usage
 
@@ -32,20 +26,12 @@ In any terminal (SSH or HTTPS depending on your needs), of course, clone can be 
 
 ```sh
 git clone --recurse-submodules git@github.com:kilianpaquier/zsh-customs.git "$HOME/.zsh-customs"
+echo "DOTFILES=\"path/to/local/dotfile/directory path/to/another/local/dotfile/directory\"" > "$HOME/.zsh-customs/.env"
 "$HOME/.zsh-customs/install.sh"
 ```
 
 ```sh
 git clone --recurse-submodules https://github.com/kilianpaquier/dotfiles.git "$HOME/.zsh-customs"
+echo "DOTFILES=\"path/to/local/dotfile/directory path/to/another/local/dotfile/directory\"" > "$HOME/.zsh-customs/.env"
 "$HOME/.zsh-customs/install.sh"
-```
-
-Input variable `DOTFILES` can be given on the first run if wanted, however, not giving it won't exit in error.
-After the first run, a file `.env` is written with either an empty list `DOTFILES=""` or the one that was given in input.
-
-Example:
-
-```sh
-DOTFILES="git@github.com:kilianpaquier/zsh-customs.git" \
-  "$HOME/.zsh-customs/install.sh"
 ```

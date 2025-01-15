@@ -50,30 +50,26 @@ log_info "Updating zsh-customs ..."
 )
 
 ##############################################
+# Set up Z4H
+##############################################
+
+if [ -n "$Z4H" ]; then
+  download https://raw.githubusercontent.com/romkatv/zsh4humans/v5/install | sh
+fi
+
+##############################################
 # Set up default .env file and source it
 ##############################################
 
-if [ -n "$DOTFILES" ]; then
-  echo "DOTFILES=\"$DOTFILES\"" > "$dir/.env"
-elif [ ! -f "$dir/.env" ]; then
-  log_info "Setting up default zsh-customs config in $dir/.env ..."
-  cp "$dir/default.env" "$dir/.env"
-fi
-log_success "Using following zsh-customs configuration:"
-log "$(cat "$dir/.env")"
 # shellcheck disable=SC1091
-. "$dir/.env"
+[ -f "$dir/.env" ] && . "$dir/.env"
 
-##############################################
-# Set up Oh My Zsh
-##############################################
+log_success "Using following dotfiles configuration:"
+log "DOTFILES=$DOTFILES"
 
-ZSH="$HOME/.oh-my-zsh"
-ZSH_CUSTOM="$ZSH/custom"
-
-if [ ! -d "$ZSH" ]; then
-  log_info "Installing oh-my-zsh ..."
-  download https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh | ZSH="$ZSH" sh
+if [ -z "$DOTFILES" ]; then
+  log_warn "Empty dotfiles, skipping installation, please provide your dotfiles path (local) in .env file"
+  exit
 fi
 
 ##############################################
@@ -82,49 +78,70 @@ fi
 # and then run customs links sync
 ##############################################
 
-mkdir -p "$dir/customs"
+custom="$dir/custom"
+mkdir -p "$custom" "$custom/plugins" "$custom/themes"
 # shellcheck disable=SC2154
 for dotfile in $DOTFILES; do
-  dotfile_name="$(basename "$dotfile" .git)"
-  dotfile_dir="$dir/customs/$dotfile_name"
+  dotfile_name="$(basename "$dotfile")"
   log_info "Setting up $dotfile_name custom ..."
 
-  (
-    [ -d "$dotfile_dir" ] || git submodule add "$dotfile" "$dotfile_dir"
+  if [ ! -d "$dotfile" ]; then
+    log_warn "$dotfile_name provided dir $dotfile isn't a directory"
+    continue
+  fi
 
-    [ -x "$dotfile_dir/install.sh" ] && "$dotfile_dir/install.sh"
+  # run installation script
+  [ -x "$dotfile/install.sh" ] && "$dotfile/install.sh"
 
-    if [ -d "$dotfile_dir/custom" ]; then
-      log_info "Creating symbolic links for $dotfile_name ..."
-      for item in "$dotfile_dir/custom"/*; do
-        # handle symbolic links between subdirs
-        if [ -d "$item" ]; then
-          for subitem in "$item"/*; do
-            target="$ZSH_CUSTOM/$(basename "$item")/$(basename "$subitem")"
-            log "Setting up $subitem symbolic link with $target ..."
-            { [ -L "$target" ] && [ -e "$target" ]; } || ln -sf "$subitem" "$target"
-          done
-        fi
+  # setup temporary .env.zsh
+  [ ! -f "$dir/.env.zsh" ] && [ -f "$dotfile/.env.zsh" ] && cat < "$dotfile/.env.zsh" >> "$dir/temp.env.zsh"
 
-        # handle symbolic links between files
-        if [ -f "$item" ]; then
-          target="$ZSH_CUSTOM/$(basename "$item")"
-          log "Setting up $item symbolic link with $target ..."
-          { [ -L "$target" ] && [ -e "$target" ]; } || ln -sf "$item" "$ZSH_CUSTOM/$(basename "$item")"
-        fi
-      done
-    fi
-  )
+  # create symbolic links between dotfile custom and global dir custom
+  if [ -d "$dotfile/custom" ]; then
+    log_info "Creating symbolic links for $dotfile_name ..."
+    for item in "$dotfile/custom"/*; do
+      # handle symbolic links between subdirs
+      if [ -d "$item" ]; then
+        for subitem in "$item"/*; do
+          target="$custom/$(basename "$item")/$(basename "$subitem")"
+          log "Setting up $subitem symbolic link with $target ..."
+          { [ -L "$target" ] && [ -e "$target" ]; } || ln -sf "$subitem" "$target"
+        done
+      fi
+
+      # handle symbolic links between files
+      if [ -f "$item" ]; then
+        target="$custom/$(basename "$item")"
+        log "Setting up $item symbolic link with $target ..."
+        { [ -L "$target" ] && [ -e "$target" ]; } || ln -sf "$item" "$custom/$(basename "$item")"
+      fi
+    done
+  fi
 
   log_success "Ended $dotfile_name setup ..."
 done
 
 ##############################################
-# Override any symbolic link with .zshrc
-# made by a dotfile
+# Set up default .env.zsh file and source it
 ##############################################
 
-log_info "Setting up .zshrc symbolic link ..."
-ln -sf "$dir/.zshrc" "$HOME/.zshrc"
+if [ -f "$dir/temp.env.zsh" ]; then
+  mv "$dir/temp.env.zsh" "$dir/.env.zsh"
+else
+cat << 'EOF' > "$dir/.env.zsh"
+# some more ls aliases
+alias ll='ls -l'
+alias lla='ls -lart'
+alias l='ls -CF'
 
-log_success "Installation done, close your terminal and reload it or run 'omz reload'"
+alias k="kubectl"
+
+read zenv < <(readlink -f "$0")
+read dir < <(dirname "$zenv")
+EOF
+fi
+ln -sf "$dir/.env.zsh" "$HOME/.env.zsh"
+
+log_success "Installation done, close your terminal and reload it with zsh"
+unset custom
+unset dir
