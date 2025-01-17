@@ -50,14 +50,6 @@ log_info "Updating zsh-customs ..."
 )
 
 ##############################################
-# Set up Z4H
-##############################################
-
-if [ -n "$Z4H" ]; then
-  download https://raw.githubusercontent.com/romkatv/zsh4humans/v5/install | sh
-fi
-
-##############################################
 # Set up default .env file and source it
 ##############################################
 
@@ -127,21 +119,18 @@ done
 
 if [ -f "$dir/temp.env.zsh" ]; then
   mv "$dir/temp.env.zsh" "$dir/.env.zsh"
-else
-cat << 'EOF' > "$dir/.env.zsh"
-# some more ls aliases
-alias ll='ls -l'
-alias lla='ls -lart'
-alias l='ls -CF'
-
-alias k="kubectl"
-
-read zenv < <(readlink -f "$0")
-read dir < <(dirname "$zenv")
-EOF
 fi
-ln -sf "$dir/.env.zsh" "$HOME/.env.zsh"
+[ -f "$dir/.env.zsh" ] && ln -sf "$dir/.env.zsh" "$HOME/.env.zsh"
 
-log_success "Installation done, close your terminal and reload it with zsh"
+##############################################
+# Set up Z4H
+##############################################
+
+if [ -d "$HOME/.cache/zsh4humans/v5" ]; then
+  download https://raw.githubusercontent.com/romkatv/zsh4humans/v5/install | sh
+fi
+
+log_success "Installation done, reloading terminal with zsh"
 unset custom
 unset dir
+exec zsh
